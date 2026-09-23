@@ -1,29 +1,212 @@
-"""
-Launches Gazebo Harmonic (gz sim) with the car_factory world.
+<?xml version="1.0" ?>
+<sdf version="1.9">
+  <world name="car_factory">
 
-Run with:
-    ros2 launch SEDAR_Robotics_1 car_factory_world.launch.py
-"""
+    <!-- Core simulation systems every gz-sim world needs -->
+    <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
+    <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
 
-import os
-from ament_index_python.packages import get_package_share_directory
-from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription
-from launch.launch_description_sources import PythonLaunchDescriptionSource
+    <!-- Contact/physics needed for anything the arm picks up -->
+    <plugin filename="gz-sim-contact-system" name="gz::sim::systems::Contact"/>
 
+    <gravity>0 0 -9.8</gravity>
 
-def generate_launch_description():
-    pkg_share = get_package_share_directory('SEDAR_Robotics_1')
-    world_path = os.path.join(pkg_share, 'worlds', 'car_factory.sdf')
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.9 0.9 0.9 1</diffuse>
+      <specular>0.3 0.3 0.3 1</specular>
+      <direction>-0.4 0.2 -0.9</direction>
+    </light>
 
-    ros_gz_sim_share = get_package_share_directory('ros_gz_sim')
-    gz_sim_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(ros_gz_sim_share, 'launch', 'gz_sim.launch.py')
-        ),
-        launch_arguments={'gz_args': world_path}.items(),
-    )
+    <model name="factory_floor">
+      <static>true</static>
+      <link name="floor_link">
+        <collision name="floor_collision">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>20 20</size>
+            </plane>
+          </geometry>
+        </collision>
+        <visual name="floor_visual">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>20 20</size>
+            </plane>
+          </geometry>
+          <material>
+            <ambient>0.45 0.45 0.47 1</ambient>
+            <diffuse>0.45 0.45 0.47 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
 
-    return LaunchDescription([
-        gz_sim_launch,
-    ])
+    <!--
+      FACTORY WALLS
+      Four static walls enclosing the 20x20 floor, height 4m. This is what
+      makes it read as an indoor factory rather than a robot floating on a
+      gray plane -- a cheap visual win for very little SDF.
+    -->
+    <model name="factory_walls">
+      <static>true</static>
+
+      <link name="wall_north">
+        <pose>0 10 2 0 0 0</pose>
+        <visual name="v"><geometry><box><size>20 0.2 4</size></box></geometry>
+          <material><ambient>0.8 0.8 0.78 1</ambient><diffuse>0.8 0.8 0.78 1</diffuse></material></visual>
+        <collision name="c"><geometry><box><size>20 0.2 4</size></box></geometry></collision>
+      </link>
+
+      <link name="wall_south">
+        <pose>0 -10 2 0 0 0</pose>
+        <visual name="v"><geometry><box><size>20 0.2 4</size></box></geometry>
+          <material><ambient>0.8 0.8 0.78 1</ambient><diffuse>0.8 0.8 0.78 1</diffuse></material></visual>
+        <collision name="c"><geometry><box><size>20 0.2 4</size></box></geometry></collision>
+      </link>
+
+      <link name="wall_east">
+        <pose>10 0 2 0 0 1.5708</pose>
+        <visual name="v"><geometry><box><size>20 0.2 4</size></box></geometry>
+          <material><ambient>0.8 0.8 0.78 1</ambient><diffuse>0.8 0.8 0.78 1</diffuse></material></visual>
+        <collision name="c"><geometry><box><size>20 0.2 4</size></box></geometry></collision>
+      </link>
+
+      <link name="wall_west">
+        <pose>-10 0 2 0 0 1.5708</pose>
+        <visual name="v"><geometry><box><size>20 0.2 4</size></box></geometry>
+          <material><ambient>0.8 0.8 0.78 1</ambient><diffuse>0.8 0.8 0.78 1</diffuse></material></visual>
+        <collision name="c"><geometry><box><size>20 0.2 4</size></box></geometry></collision>
+      </link>
+    </model>
+
+    <!-- Overhead factory lighting -- point lights instead of relying only on the sun -->
+    <light type="point" name="ceiling_light_1">
+      <pose>0 3 3.8 0 0 0</pose>
+      <diffuse>1 1 0.95 1</diffuse>
+      <attenuation><range>15</range><linear>0.1</linear><constant>0.3</constant></attenuation>
+      <cast_shadows>false</cast_shadows>
+    </light>
+    <light type="point" name="ceiling_light_2">
+      <pose>0 -3 3.8 0 0 0</pose>
+      <diffuse>1 1 0.95 1</diffuse>
+      <attenuation><range>15</range><linear>0.1</linear><constant>0.3</constant></attenuation>
+      <cast_shadows>false</cast_shadows>
+    </light>
+    <light type="point" name="ceiling_light_3">
+      <pose>4 0 3.8 0 0 0</pose>
+      <diffuse>1 1 0.95 1</diffuse>
+      <attenuation><range>15</range><linear>0.1</linear><constant>0.3</constant></attenuation>
+      <cast_shadows>false</cast_shadows>
+    </light>
+
+    <!--
+      FLOOR SAFETY MARKINGS
+      Thin yellow stripe outline around the conveyor's work cell -- a real
+      factory-floor convention marking where the automated equipment
+      operates. Visual only, no collision, so it doesn't affect physics.
+    -->
+    <model name="safety_zone_markings">
+      <static>true</static>
+      <link name="stripe_link">
+        <pose>0 0 0.002 0 0 0</pose>
+        <visual name="stripe_front"><pose>1.2 0.9 0 0 0 0</pose>
+          <geometry><box><size>3.4 0.05 0.001</size></box></geometry>
+          <material><ambient>1 0.8 0 1</ambient><diffuse>1 0.8 0 1</diffuse></material></visual>
+        <visual name="stripe_back"><pose>1.2 -0.9 0 0 0 0</pose>
+          <geometry><box><size>3.4 0.05 0.001</size></box></geometry>
+          <material><ambient>1 0.8 0 1</ambient><diffuse>1 0.8 0 1</diffuse></material></visual>
+        <visual name="stripe_left"><pose>-0.5 0 0 0 0 1.5708</pose>
+          <geometry><box><size>1.8 0.05 0.001</size></box></geometry>
+          <material><ambient>1 0.8 0 1</ambient><diffuse>1 0.8 0 1</diffuse></material></visual>
+        <visual name="stripe_right"><pose>2.9 0 0 0 0 1.5708</pose>
+          <geometry><box><size>1.8 0.05 0.001</size></box></geometry>
+          <material><ambient>1 0.8 0 1</ambient><diffuse>1 0.8 0 1</diffuse></material></visual>
+      </link>
+    </model>
+
+    <!--
+      CONVEYOR BELT
+      Two-part model: a static base, and a "belt" link connected to it by a
+      prismatic joint that slides along X. JointController lets us drive that
+      joint's velocity from a ROS 2 topic (via ros_gz_bridge), so "starting
+      the belt" is just publishing a velocity command like a real PLC would.
+    -->
+    <model name="conveyor_belt">
+      <pose>1.2 0 0 0 0 0</pose>
+      <static>false</static>
+
+      <link name="base_link">
+        <inertial>
+          <mass>1000</mass>
+          <inertia><ixx>50</ixx><iyy>50</iyy><izz>50</izz><ixy>0</ixy><ixz>0</ixz><iyz>0</iyz></inertia>
+        </inertial>
+        <visual name="base_visual">
+          <geometry><box><size>3.0 0.6 0.4</size></box></geometry>
+          <material><ambient>0.2 0.2 0.2 1</ambient><diffuse>0.2 0.2 0.2 1</diffuse></material>
+        </visual>
+        <visual name="base_accent_stripe">
+          <pose>0 0.31 0 0 0 0</pose>
+          <geometry><box><size>3.0 0.02 0.4</size></box></geometry>
+          <material><ambient>1 0.8 0 1</ambient><diffuse>1 0.8 0 1</diffuse></material>
+        </visual>
+        <collision name="base_collision">
+          <geometry><box><size>3.0 0.6 0.4</size></box></geometry>
+        </collision>
+      </link>
+
+      <link name="belt_link">
+        <pose relative_to="base_link">0 0 0.22 0 0 0</pose>
+        <inertial>
+          <mass>50</mass>
+          <inertia><ixx>1</ixx><iyy>1</iyy><izz>1</izz><ixy>0</ixy><ixz>0</ixz><iyz>0</iyz></inertia>
+        </inertial>
+        <visual name="belt_visual">
+          <geometry><box><size>3.0 0.6 0.05</size></box></geometry>
+          <material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.05 0.05 0.05 1</diffuse></material>
+        </visual>
+        <collision name="belt_collision">
+          <geometry><box><size>3.0 0.6 0.05</size></box></geometry>
+          <surface>
+            <friction><ode><mu>1.0</mu><mu2>1.0</mu2></ode></friction>
+          </surface>
+        </collision>
+      </link>
+
+      <!--
+        Prismatic joint: belt_link can only translate along X relative to
+        base_link. Limits are wide so it acts like an endless belt for the
+        length of our demo run (we reset position in the control node).
+      -->
+      <joint name="belt_slide_joint" type="prismatic">
+        <parent>base_link</parent>
+        <child>belt_link</child>
+        <axis>
+          <xyz>1 0 0</xyz>
+          <limit>
+            <lower>-1000</lower>
+            <upper>1000</upper>
+          </limit>
+        </axis>
+      </joint>
+
+      <plugin filename="gz-sim-joint-controller-system" name="gz::sim::systems::JointController">
+        <joint_name>belt_slide_joint</joint_name>
+        <!-- initial velocity; we override this live via /model/conveyor_belt/joint/belt_slide_joint/cmd_vel -->
+        <initial_velocity>0.0</initial_velocity>
+      </plugin>
+
+      <plugin filename="gz-sim-joint-state-publisher-system" name="gz::sim::systems::JointStatePublisher"/>
+
+    </model>
+
+  </world>
+  
+</sdf>
