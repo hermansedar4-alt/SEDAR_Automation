@@ -42,10 +42,93 @@
             </plane>
           </geometry>
           <material>
-            <ambient>0.5 0.5 0.5 1</ambient>
-            <diffuse>0.5 0.5 0.5 1</diffuse>
+            <ambient>0.45 0.45 0.47 1</ambient>
+            <diffuse>0.45 0.45 0.47 1</diffuse>
           </material>
         </visual>
+      </link>
+    </model>
+
+    <!--
+      FACTORY WALLS
+      Four static walls enclosing the 20x20 floor, height 4m. This is what
+      makes it read as an indoor factory rather than a robot floating on a
+      gray plane -- a cheap visual win for very little SDF.
+    -->
+    <model name="factory_walls">
+      <static>true</static>
+
+      <link name="wall_north">
+        <pose>0 10 2 0 0 0</pose>
+        <visual name="v"><geometry><box><size>20 0.2 4</size></box></geometry>
+          <material><ambient>0.8 0.8 0.78 1</ambient><diffuse>0.8 0.8 0.78 1</diffuse></material></visual>
+        <collision name="c"><geometry><box><size>20 0.2 4</size></box></geometry></collision>
+      </link>
+
+      <link name="wall_south">
+        <pose>0 -10 2 0 0 0</pose>
+        <visual name="v"><geometry><box><size>20 0.2 4</size></box></geometry>
+          <material><ambient>0.8 0.8 0.78 1</ambient><diffuse>0.8 0.8 0.78 1</diffuse></material></visual>
+        <collision name="c"><geometry><box><size>20 0.2 4</size></box></geometry></collision>
+      </link>
+
+      <link name="wall_east">
+        <pose>10 0 2 0 0 1.5708</pose>
+        <visual name="v"><geometry><box><size>20 0.2 4</size></box></geometry>
+          <material><ambient>0.8 0.8 0.78 1</ambient><diffuse>0.8 0.8 0.78 1</diffuse></material></visual>
+        <collision name="c"><geometry><box><size>20 0.2 4</size></box></geometry></collision>
+      </link>
+
+      <link name="wall_west">
+        <pose>-10 0 2 0 0 1.5708</pose>
+        <visual name="v"><geometry><box><size>20 0.2 4</size></box></geometry>
+          <material><ambient>0.8 0.8 0.78 1</ambient><diffuse>0.8 0.8 0.78 1</diffuse></material></visual>
+        <collision name="c"><geometry><box><size>20 0.2 4</size></box></geometry></collision>
+      </link>
+    </model>
+
+    <!-- Overhead factory lighting -- point lights instead of relying only on the sun -->
+    <light type="point" name="ceiling_light_1">
+      <pose>0 3 3.8 0 0 0</pose>
+      <diffuse>1 1 0.95 1</diffuse>
+      <attenuation><range>15</range><linear>0.1</linear><constant>0.3</constant></attenuation>
+      <cast_shadows>false</cast_shadows>
+    </light>
+    <light type="point" name="ceiling_light_2">
+      <pose>0 -3 3.8 0 0 0</pose>
+      <diffuse>1 1 0.95 1</diffuse>
+      <attenuation><range>15</range><linear>0.1</linear><constant>0.3</constant></attenuation>
+      <cast_shadows>false</cast_shadows>
+    </light>
+    <light type="point" name="ceiling_light_3">
+      <pose>4 0 3.8 0 0 0</pose>
+      <diffuse>1 1 0.95 1</diffuse>
+      <attenuation><range>15</range><linear>0.1</linear><constant>0.3</constant></attenuation>
+      <cast_shadows>false</cast_shadows>
+    </light>
+
+    <!--
+      FLOOR SAFETY MARKINGS
+      Thin yellow stripe outline around the conveyor's work cell -- a real
+      factory-floor convention marking where the automated equipment
+      operates. Visual only, no collision, so it doesn't affect physics.
+    -->
+    <model name="safety_zone_markings">
+      <static>true</static>
+      <link name="stripe_link">
+        <pose>0 0 0.002 0 0 0</pose>
+        <visual name="stripe_front"><pose>1.2 0.9 0 0 0 0</pose>
+          <geometry><box><size>3.4 0.05 0.001</size></box></geometry>
+          <material><ambient>1 0.8 0 1</ambient><diffuse>1 0.8 0 1</diffuse></material></visual>
+        <visual name="stripe_back"><pose>1.2 -0.9 0 0 0 0</pose>
+          <geometry><box><size>3.4 0.05 0.001</size></box></geometry>
+          <material><ambient>1 0.8 0 1</ambient><diffuse>1 0.8 0 1</diffuse></material></visual>
+        <visual name="stripe_left"><pose>-0.5 0 0 0 0 1.5708</pose>
+          <geometry><box><size>1.8 0.05 0.001</size></box></geometry>
+          <material><ambient>1 0.8 0 1</ambient><diffuse>1 0.8 0 1</diffuse></material></visual>
+        <visual name="stripe_right"><pose>2.9 0 0 0 0 1.5708</pose>
+          <geometry><box><size>1.8 0.05 0.001</size></box></geometry>
+          <material><ambient>1 0.8 0 1</ambient><diffuse>1 0.8 0 1</diffuse></material></visual>
       </link>
     </model>
 
@@ -68,6 +151,11 @@
         <visual name="base_visual">
           <geometry><box><size>3.0 0.6 0.4</size></box></geometry>
           <material><ambient>0.2 0.2 0.2 1</ambient><diffuse>0.2 0.2 0.2 1</diffuse></material>
+        </visual>
+        <visual name="base_accent_stripe">
+          <pose>0 0.31 0 0 0 0</pose>
+          <geometry><box><size>3.0 0.02 0.4</size></box></geometry>
+          <material><ambient>1 0.8 0 1</ambient><diffuse>1 0.8 0 1</diffuse></material>
         </visual>
         <collision name="base_collision">
           <geometry><box><size>3.0 0.6 0.4</size></box></geometry>
@@ -120,4 +208,5 @@
     </model>
 
   </world>
+  
 </sdf>
