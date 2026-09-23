@@ -204,8 +204,13 @@
       </plugin>
 
       <plugin filename="gz-sim-joint-state-publisher-system" name="gz::sim::systems::JointStatePublisher"/>
-
-    </model>
+    <include>
+      <uri>file:///home/idress_computers/.gz/fuel/fuel.gazebosim.org/openrobotics/models/picking_shelves/1</uri>
+      <name>picking_shelves_1</name>
+      <pose>4 4 0 0 0 0</pose>
+    </include>
+    
+</model>
 
   </world>
   
