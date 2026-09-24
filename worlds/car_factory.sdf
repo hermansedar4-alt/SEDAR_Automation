@@ -53,7 +53,7 @@
       FACTORY WALLS
       Four static walls enclosing the 20x20 floor, height 4m. This is what
       makes it read as an indoor factory rather than a robot floating on a
-      gray plane -- a cheap visual win for very little SDF.
+      gray plane, a cheap visual win for very little SDF.
     -->
     <model name="factory_walls">
       <static>true</static>
@@ -87,7 +87,7 @@
       </link>
     </model>
 
-    <!-- Overhead factory lighting -- point lights instead of relying only on the sun -->
+    <!-- Overhead factory lighting: point lights instead of relying only on the sun -->
     <light type="point" name="ceiling_light_1">
       <pose>0 3 3.8 0 0 0</pose>
       <diffuse>1 1 0.95 1</diffuse>
@@ -109,7 +109,7 @@
 
     <!--
       FLOOR SAFETY MARKINGS
-      Thin yellow stripe outline around the conveyor's work cell -- a real
+      Thin yellow stripe outline around the conveyor's work cell, a real
       factory-floor convention marking where the automated equipment
       operates. Visual only, no collision, so it doesn't affect physics.
     -->
@@ -218,5 +218,4 @@
     </include>
 
   </world>
-  
 </sdf>
